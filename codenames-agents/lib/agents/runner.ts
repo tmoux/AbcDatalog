@@ -3,7 +3,7 @@ import { Game, Team, TurnEntry, GuessResult } from '@/types/game'
 import { generateClue } from './clue-giver'
 import { generateGuesses } from './guesser'
 import { applyGuess, checkWin } from '../game-logic'
-import { updateGame, insertTurn } from '../db'
+import { updateGame, insertTurn, getGame } from '../db'
 
 function emit(emitter: EventEmitter, gameId: string, type: string, data: Record<string, unknown>) {
   emitter.emit('event', { type, gameId, data })
@@ -18,7 +18,6 @@ export async function executeTurn(game: Game, emitter: EventEmitter): Promise<Ga
   const clueGiverConfig = team === 'red' ? game.redClueGiver : game.blueClueGiver
   const guesserConfig = team === 'red' ? game.redGuesser : game.blueGuesser
 
-  // ── Phase 1: Clue giver ────────────────────────────────────────────────────
   emit(emitter, game.id, 'status', {
     team,
     role: 'clue-giver',
@@ -56,10 +55,8 @@ export async function executeTurn(game: Game, emitter: EventEmitter): Promise<Ga
   insertTurn(clueTurn)
   emit(emitter, game.id, 'clue', { team, clue, count, agentName: clueGiverConfig.name })
 
-  // Brief pause so the UI can display the clue before guesser starts
   await sleep(500)
 
-  // ── Phase 2: Guesser ───────────────────────────────────────────────────────
   emit(emitter, game.id, 'status', {
     team,
     role: 'guesser',
@@ -166,12 +163,14 @@ export async function executeTurn(game: Game, emitter: EventEmitter): Promise<Ga
   }
 
   const nextTeam: Team = team === 'red' ? 'blue' : 'red'
+  // Re-read DB status so an external pause set during the LLM call isn't overwritten
+  const latestStatus = getGame(game.id)?.status
   game = {
     ...game,
     board: updatedBoard,
     currentTeam: nextTeam,
     turnNumber: game.turnNumber + 1,
-    status: 'running',
+    status: latestStatus === 'paused' ? 'paused' : 'running',
   }
 
   updateGame(game)

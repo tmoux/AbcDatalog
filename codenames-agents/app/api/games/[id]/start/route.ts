@@ -10,16 +10,19 @@ async function runGameLoop(gameId: string): Promise<void> {
 
   try {
     while (true) {
+      // Wait while paused
       while (runnerState.paused) {
         await new Promise(r => setTimeout(r, 200))
       }
 
       const game = getGame(gameId)
-      if (!game || game.status !== 'running') break
+      // Only exit the loop when the game is finished, not when paused
+      if (!game || game.status === 'finished') break
 
       const updatedGame = await executeTurn(game, runnerState.emitter)
       if (updatedGame.status === 'finished') break
 
+      // Wait between turns (re-read in case speed was changed)
       const fresh = getGame(gameId)
       const delay = fresh?.speedMs ?? 2000
       await new Promise(r => setTimeout(r, delay))

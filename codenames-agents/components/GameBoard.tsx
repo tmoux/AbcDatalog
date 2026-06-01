@@ -68,7 +68,7 @@ export default function GameBoard({ board, lastGuessWord, currentTeam }: Props) 
         </span>
         {currentTeam && (
           <span className={currentTeam === 'red' ? 'text-red-300' : 'text-blue-300'}>
-            {currentTeam.toUpperCase()} team&apos;s turn
+            {`${currentTeam.toUpperCase()} team's turn`}
           </span>
         )}
         <span className="text-blue-400 font-semibold">

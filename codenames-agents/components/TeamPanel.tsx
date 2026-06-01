@@ -38,7 +38,6 @@ export default function TeamPanel({
 
   return (
     <div className={`flex flex-col gap-3 rounded-xl border-2 p-4 ${teamColor} ${isActive ? 'shadow-lg' : 'opacity-80'}`}>
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={`w-3 h-3 rounded-full ${teamBadge}`} />
@@ -56,7 +55,6 @@ export default function TeamPanel({
         </div>
       </div>
 
-      {/* Score bar */}
       <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-500 ${teamBadge}`}
@@ -65,7 +63,6 @@ export default function TeamPanel({
       </div>
       <p className={`text-xs ${teamText} opacity-70`}>{remaining} card{remaining !== 1 ? 's' : ''} remaining</p>
 
-      {/* Agents */}
       <div className="grid grid-cols-2 gap-2">
         {[
           { label: 'Spymaster', config: clueGiver, role: 'clue-giver' as const },
@@ -89,7 +86,6 @@ export default function TeamPanel({
         ))}
       </div>
 
-      {/* Last clue */}
       {lastClue && (
         <div className="rounded-lg bg-gray-900 border border-gray-700 p-2">
           <div className="text-xs text-gray-500 uppercase font-semibold mb-1">Last clue</div>
@@ -97,16 +93,19 @@ export default function TeamPanel({
         </div>
       )}
 
-      {/* Live reasoning stream */}
-      {isActive && (
+      {/* Reasoning stream: shown when active (live) or when there's text from the previous turn */}
+      {(isActive || !!streamingText) && (
         <ReasoningStream
           text={streamingText}
-          isStreaming={streamingRole !== null}
-          label={streamingRole === 'clue-giver' ? 'Spymaster thinking' : 'Field agent thinking'}
+          isStreaming={isActive && streamingRole !== null}
+          label={
+            isActive && streamingRole
+              ? streamingRole === 'clue-giver' ? 'Spymaster thinking' : 'Field agent thinking'
+              : 'Last turn reasoning'
+          }
         />
       )}
 
-      {/* Recent turns */}
       {lastTurns.length > 0 && (
         <div className="flex flex-col gap-1">
           <div className="text-xs text-gray-500 uppercase font-semibold">Recent moves</div>
